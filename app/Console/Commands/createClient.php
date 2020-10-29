@@ -7,6 +7,7 @@ use Hyn\Tenancy\Models\Hostname;
 use Illuminate\Console\Command;
 use Hyn\Tenancy\Models\Website;
 use Hyn\Tenancy\Contracts\Repositories\WebsiteRepository;
+use function GuzzleHttp\uri_template;
 
 class createClient extends Command
 {
@@ -15,7 +16,7 @@ class createClient extends Command
      *
      * @var string
      */
-    protected $signature = 'client:create';
+    protected $signature = 'client:create {subdomain} {name} {email}';
 
     /**
      * The console command description.
@@ -36,6 +37,12 @@ class createClient extends Command
 
     public function handle()
     {
+        // Base variables
+        $url = config('app.url_base');
+        $subdomain = $this->argument('subdomain');
+        $name = $this->argument('name');
+        $email = $this->argument('email');
+        $fqdn = "{$subdomain}.{$url}";
         // Create a hostname
         $hostname = new Hostname();
         $hostname->fqdn = 'demo.demo.gr';
@@ -48,5 +55,10 @@ class createClient extends Command
         // Attach Website to Hostname.
         app(HostnameRepository::class)->attach($hostname, $website);
 
+    }
+
+    private function tenantExists( $fqdn )
+    {
+        return Hostname::where('fqdn', $fqdn)->exists();
     }
 }
